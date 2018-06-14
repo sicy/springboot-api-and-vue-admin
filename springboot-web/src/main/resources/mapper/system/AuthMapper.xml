@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sicy.system.dao.AuthMapper">
+
+	<insert id="saveGroupAuth" parameterType="java.util.List">
+		insert into t_sys_group_auth(group_id, menu_id) values
+		<foreach collection="list" item="item" index="index" separator="," >  
+	        (#{item.group_id},#{item.menu_id})  
+	    </foreach> 
+	</insert>
+
+	<select id="queryGroupAuth" resultType="java.util.HashMap">
+		SELECT a.* FROM t_sys_group_auth a, t_sys_menu b WHERE a.group_id = #{group_id} AND a.`menu_id` = b.`id` AND b.`state` = 1
+	</select>
+	
+	<delete id="deleteGroupAuth">
+		delete from t_sys_group_auth where group_id = #{group_id}
+	</delete>
+	
+	<insert id="saveUserAuth" parameterType="java.util.List">
+		insert into t_sys_user_auth(user_id, menu_id) values
+		<foreach collection="list" item="item" index="index" separator="," >  
+	        (#{item.user_id},#{item.menu_id})  
+	    </foreach> 
+	</insert>
+
+	<select id="queryUserAuth" resultType="java.util.HashMap">
+		SELECT * FROM t_sys_menu WHERE level = 1 and state = 1
+		<if test="user_id != -999">
+			AND id IN (SELECT t_sys_user_auth.menu_id FROM t_sys_user_auth WHERE t_sys_user_auth.user_id = #{user_id})
+		</if>
+		ORDER BY order_code
+	</select>
+	
+	<delete id="deleteUserAuth">
+		delete from t_sys_user_auth where user_id = #{user_id}
+	</delete>
+	
+	<select id="checkAuthByMenuId" resultType="java.lang.Integer">
+		select count(*) from t_sys_group_auth where menu_id = #{menu_id}
+	</select>
+	
+	<delete id="deleteUserAuthByMap" parameterType="java.util.HashMap">
+		delete from t_sys_user_auth where user_id=#{user_id} and menu_id=#{menu_id}
+	</delete>
+	
+	<select id="queryChildMenus" resultType="java.lang.Integer">
+		SELECT menu_id FROM t_sys_user_auth 
+		<where>
+			<if test="userID != -999">
+				and user_id = #{userID,jdbcType=INTEGER}
+			</if>
+			<if test="menuID != null">
+				and menu_id IN(SELECT id FROM t_sys_menu WHERE fid=#{menuID,jdbcType=INTEGER})
+			</if>
+		</where>
+	</select>
+
+	<select id="queryAuth" resultType="java.util.HashMap">
+		select * from t_sys_user_auth where user_id = #{user_id}
+	</select>
+
+</mapper>

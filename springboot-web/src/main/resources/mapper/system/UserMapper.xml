@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sicy.system.dao.UserMapper">
+	<resultMap id="UserMap" type="com.sicy.system.vo.User">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="user_name" property="user_name" jdbcType="VARCHAR" />
+		<result column="password" property="password" jdbcType="VARCHAR" />
+		<result column="email" property="email" jdbcType="VARCHAR" />
+		<result column="real_name" property="real_name" jdbcType="VARCHAR" />
+		<result column="mobilephone_number" property="mobilephone_number" jdbcType="VARCHAR" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+		<result column="create_time" property="create_time" jdbcType="DATE" />
+		<result column="expire_time" property="expire_time" jdbcType="DATE" />
+		<result column="group_id" property="group_id" jdbcType="INTEGER" />
+
+	</resultMap>
+
+	<sql id="User_all_Column_List">
+		id,user_name,password,email,real_name,mobilephone_number,status,create_time,expire_time,group_id
+	</sql>
+	<sql id="User_all_Column_List_without_id">
+		user_name,password,email,real_name,mobilephone_number,group_id,create_time,expire_time
+	</sql>
+
+	<select id="loadUserByUsername" resultMap="UserMap">
+		SELECT * FROM t_sys_user WHERE user_name = #{username}
+	</select>
+
+	<insert id="insertUser" parameterType="com.sicy.system.vo.User">
+		insert into t_sys_user (<include refid="User_all_Column_List_without_id" />)
+		values(
+		#{user_name},
+		#{password},
+		#{email},
+		#{real_name},
+		#{mobilephone_number},
+		#{group_id},
+		#{create_time},
+		#{expire_time}
+		)
+		<selectKey resultType="java.lang.Integer"  order="AFTER" keyProperty="id" >
+			select LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+	<update id="modifyUser" parameterType="com.sicy.system.vo.User">
+		update t_sys_user
+		<set>
+			<if test="user_name != null">
+				user_name = #{user_name},
+			</if>
+			<if test="password != null">
+				password = #{password},
+			</if>
+			<if test="email != null">
+				email = #{email},
+			</if>
+			<if test="real_name != null">
+				real_name = #{real_name},
+			</if>
+			<if test="mobilephone_number != null">
+				mobilephone_number = #{mobilephone_number},
+			</if>
+			<if test="status != null">
+				status = #{status},
+			</if>
+			<if test="group_id != null">
+				group_id = #{group_id},
+			</if>
+			<if test="create_time != null">
+				create_time = #{create_time},
+			</if>
+			<if test="expire_time != null">
+				expire_time = #{expire_time}
+			</if>
+		</set>
+		<where>
+			id = #{id,jdbcType=INTEGER}
+		</where>
+	</update>
+
+	<delete id="deleteUser" parameterType="java.lang.Integer">
+		delete from t_sys_user where id = #{id}
+	</delete>
+
+	<select id="queryUser" parameterType="com.sicy.system.vo.User" resultMap="UserMap">
+		select
+		<include refid="User_all_Column_List" />
+		from t_sys_user
+		<where>
+			1 = 1
+			<if test="id != null">
+				and id = #{id,jdbcType=INTEGER}
+			</if>
+			<if test="group_id != null">
+				and group_id = #{group_id}
+			</if>
+			<if test="user_name != null">
+				and (binary user_name = #{user_name,jdbcType=VARCHAR} or binary email = #{user_name,jdbcType=VARCHAR} or mobilephone_number = #{user_name,jdbcType=VARCHAR})
+			</if>
+			<if test="password != null">
+				and binary password = #{password,jdbcType=VARCHAR}
+			</if>
+			<if test="mobilephone_number !=null">
+				and mobilephone_number = #{mobilephone_number,jdbcType=VARCHAR}
+			</if>
+			<if test="email !=null">
+				and binary email = #{email,jdbcType=VARCHAR}
+			</if>
+		</where>
+		order by id
+	</select>
+
+	<select id="queryFilterUserCount" parameterType="com.sicy.system.vo.User" resultType="java.lang.Integer">
+		select count(*) from t_sys_user
+		<where>
+			1 = 1
+			<if test="id != null">
+				and id = #{id}
+			</if>
+			<if test="group_id != null">
+				and group_id = #{group_id}
+			</if>
+			<if test="role_id != null">
+				and role_id = #{role_id}
+			</if>
+			<if test="user_name != null">
+				and (user_name like #{user_name} or real_name like #{user_name})
+			</if>
+			<!-- 排除超级管理员 -->
+			and id &lt;&gt; -999
+			-- 			and role_id = '1'
+		</where>
+	</select>
+
+
+
+	<select id="queryUserName" resultType="java.lang.Integer">
+		select count(*) from t_sys_user
+		<where>
+			binary user_name = #{user_name}
+			<if test="id == -1">
+				and id &lt;&gt; #{id}
+			</if>
+		</where>
+	</select>
+
+	<select id="queryRealName" resultType="java.lang.Integer">
+		select count(*) from t_sys_user
+		<where>
+			binary real_name=#{real_name}
+			<if test="id == -1">
+				and id &lt;&gt; #{id}
+			</if>
+		</where>
+	</select>
+
+	<select id="queryById" parameterType="java.lang.Integer" resultMap="UserMap">
+		select * from t_sys_user where id = #{id}
+	</select>
+
+	<select id="checkName" resultType="java.lang.Integer">
+		select count(*) from t_sys_user
+		<where>
+			binary user_name = #{newName} and id &lt;&gt; #{id}
+		</where>
+	</select>
+
+	<select id="queryFilterUserForPage" resultType="java.util.HashMap">
+		select
+		<include refid="User_all_Column_List" />,
+		(select t_sys_group.group_name from t_sys_group  where t_sys_group.id =  t_sys_user.group_id) as group_name
+		from t_sys_user
+		<where>
+			1 = 1
+			<if test="user.id != null">
+				and id = #{user.id,jdbcType=INTEGER}
+			</if>
+			<if test="user.user_name != null">
+				and (user_name like #{user.user_name} or real_name like #{user.user_name})
+			</if>
+			<if test="user.group_id != null">
+				and group_id = #{user.group_id}
+			</if>
+			<if test="user.role_id != null">
+				and role_id = #{user.role_id}
+			</if>
+			<!-- 排除超级管理员 -->
+			and id &lt;&gt; -999
+			-- 			and role_id = '1'
+		</where>
+		order by id desc
+		limit #{pageIndex},#{pageSize}
+	</select>
+
+	<select id="queryUserByUserName" parameterType="com.sicy.system.vo.User" resultMap="UserMap">
+		select
+		<include refid="User_all_Column_List" />
+		from t_sys_user
+		<where>
+			1 = 1
+			<if test="user_name != null">
+				and (user_name = #{user_name} or email = #{user_name} or mobilephone_number = #{user_name})
+			</if>
+		</where>
+		order by id
+	</select>
+
+	<update id="lockCustomUser" parameterType="com.sicy.system.vo.User">
+		update t_sys_user set status = '2'
+		<where>
+			user_name = #{user_name} or email = #{user_name} or mobilephone_number = #{user_name} and role_id = '2'
+		</where>
+	</update>
+
+	<select id="queryAllUser" resultMap="UserMap">
+		select
+		<include refid="User_all_Column_List" />
+		from t_sys_user
+	</select>
+
+	<select id="checkUserName" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		from t_sys_user
+		WHERE binary user_name = #{userName} AND id != #{id}
+	</select>
+
+	<select id="checkEmail" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		from t_sys_user
+		WHERE binary email = #{email} AND id != #{id}
+	</select>
+	<select id="checkMobilePhone" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		from t_sys_user
+		WHERE mobilephone_number = #{mobilePhone} AND id != #{id}
+	</select>
+</mapper>

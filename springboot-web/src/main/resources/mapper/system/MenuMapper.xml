@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sicy.system.dao.MenuMapper">
+	
+	<resultMap id="menuMap" type="com.sicy.system.vo.MenuVo">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="menu_name" property="menu_name" jdbcType="VARCHAR" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="icon_class" property="icon_class" jdbcType="VARCHAR" />
+		<result column="level" property="level" jdbcType="INTEGER" />
+		<result column="fid" property="fid" jdbcType="INTEGER" />
+		<result column="fname" property="fname" jdbcType="INTEGER" />
+		<result column="order_code" property="order_code" jdbcType="INTEGER" />
+		<result column="state" property="state" jdbcType="INTEGER" />
+	</resultMap>
+
+	<resultMap id="menuInTreeMap" type="com.sicy.system.vo.MenuVo">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="menu_name" property="menu_name" jdbcType="VARCHAR" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="icon_class" property="icon_class" jdbcType="VARCHAR" />
+		<result column="level" property="level" jdbcType="INTEGER" />
+		<result column="fid" property="fid" jdbcType="INTEGER" />
+		<result column="order_code" property="order_code" jdbcType="INTEGER" />
+		<result column="state" property="state" jdbcType="INTEGER" />
+		<collection property="chlid_list" ofType="menuMap" column="id" select="queryByFid"/>
+	</resultMap>
+
+	<resultMap id="menuInTreeMap2" type="com.sicy.system.vo.MenuVo">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="menu_name" property="menu_name" jdbcType="VARCHAR" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="icon_class" property="icon_class" jdbcType="VARCHAR" />
+		<result column="level" property="level" jdbcType="INTEGER" />
+		<result column="fid" property="fid" jdbcType="INTEGER" />
+		<result column="order_code" property="order_code" jdbcType="INTEGER" />
+		<result column="state" property="state" jdbcType="INTEGER" />
+		<collection property="chlid_list" ofType="menuMap" column="{fid=id, group_id=group_id}" select="queryChild"/>
+	</resultMap>
+	
+	<sql id="Menu_all_Column_List">
+		id,menu_name,url,icon_class,level,fid,order_code,state
+	</sql>
+	<sql id="Menu_all_Column_List_without_id">
+		menu_name,url,icon_class,level,fid,order_code,state
+	</sql>
+	
+	<insert id="saveMenu" parameterType="com.sicy.system.vo.MenuVo">
+		insert into t_sys_menu(<include refid="Menu_all_Column_List_without_id"/>)
+		values(#{menu_name},#{url},#{icon_class},#{level},#{fid},#{order_code},#{state})
+	</insert>
+	
+	<update id="modifyMenu" parameterType="com.sicy.system.vo.MenuVo">
+		update t_sys_menu
+		<set>
+			<if test="menu_name != null">
+				menu_name = #{menu_name},
+			</if>
+			<if test="url != null">
+				url = #{url},
+			</if>
+			<if test="icon_class != null">
+				icon_class = #{icon_class},
+			</if>
+			<if test="order_code != null">
+				order_code = #{order_code},
+			</if>
+			<if test="fid != null">
+				fid = #{fid},
+			</if>
+			<if test="state != null">
+				state = #{state}
+			</if>
+		</set>
+		<where>
+			id = #{id}
+		</where>
+	</update>
+	
+	<select id="queryAll" resultMap="menuMap">
+		select * from t_sys_menu order by order_code
+	</select>
+	
+	<select id="queryByIds" resultMap="menuMap">
+		select * from t_sys_menu
+		<where>
+			f_code = #{f_code}
+			<if test="ids != ''">
+				and code in (${ids})
+			</if>
+		</where>
+		order by order_code
+	</select>
+	
+	<delete id="deleteMenu">
+		delete from t_sys_menu where id = #{id}
+	</delete>
+
+	<select id="queryForLogin" resultMap="menuMap">
+		select * from t_sys_menu
+		<where>
+			fid = #{fid}
+			<if test="ids != ''">
+				and id in (${ids})
+			</if>
+			and state = 1
+		</where>
+		order by order_code
+	</select>
+
+	<select id="queryByCondition" parameterType="com.sicy.system.vo.MenuVo" resultMap="menuMap">
+		select *, (select b.menu_name from t_sys_menu b where b.id = a.fid) as fname from t_sys_menu a
+		<where>
+			<if test="id != null">
+				and id = #{id}
+			</if>
+			<if test="level != null">
+				and level = #{level}
+			</if>
+			<if test="fid != null">
+				and fid = #{fid}
+			</if>
+			<if test="order_code != null">
+				and order_code = #{order_code}
+			</if>
+			<if test="state != null">
+				and state = #{state}
+			</if>
+		</where>
+		order by order_code
+	</select>
+
+	<select id="queryInTree" resultMap="menuInTreeMap">
+		select * from t_sys_menu where level = 0
+	</select>
+
+	<!-- 下面方法被queryInTree返回树形的查询调用 -->
+	<select id="queryByFid" resultMap="menuMap">
+		select * from t_sys_menu where fid = #{fid} and state = 1 and menu_name &lt;&gt; '菜单管理'
+	</select>
+
+	<select id="queryByGroupId" resultMap="menuInTreeMap2">
+		SELECT *, ${group_id} as group_id FROM t_sys_menu a WHERE LEVEL = 0
+		AND EXISTS (SELECT * FROM t_sys_menu b, t_sys_group_auth c WHERE b.fid = a.id AND b.id = c.menu_id AND c.group_id = #{group_id})
+	</select>
+
+	<!-- 下面方法被queryByGroupId返回树形的查询调用 -->
+	<select id="queryChild" parameterType="java.util.HashMap" resultMap="menuMap">
+		SELECT a.* FROM t_sys_menu a, t_sys_group_auth b WHERE LEVEL = 1 AND fid = #{fid} AND a.id = b.`menu_id` AND b.`group_id` = #{group_id}
+	</select>
+
+</mapper>
