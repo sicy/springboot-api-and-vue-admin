@@ -2,9 +2,10 @@ package com.sicy.common.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.sicy.common.ReturnMsg;
+import com.sicy.common.config.ProjectConfig;
 import com.sicy.common.controller.BaseController;
 import com.sicy.system.vo.User;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -26,11 +27,8 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class SysInterceptor implements HandlerInterceptor {
 
-    /**
-     * 利用正则映射到不需要拦截的路径
-     */
-    @Value("${interceptor.exURL}")
-    private String[] mappingURL;
+    @Autowired
+    private ProjectConfig projectConfig;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object o) throws Exception {
@@ -41,8 +39,8 @@ public class SysInterceptor implements HandlerInterceptor {
         //是否被拦截,需要过滤不拦截的URL数组
         boolean isBool = true;
         //判断配置的URL是否需要被拦截，如果不需要则直接返回true
-        if (mappingURL != null && mappingURL.length > 0) {
-            for (String urlStr : mappingURL) {
+        if (projectConfig.getInterceptorExcludeUrl() != null && projectConfig.getInterceptorExcludeUrl().size() > 0) {
+            for (String urlStr : projectConfig.getInterceptorExcludeUrl()) {
                 if (url.contains(urlStr)) {
                     //过滤掉，不需要拦截
                     isBool = false;

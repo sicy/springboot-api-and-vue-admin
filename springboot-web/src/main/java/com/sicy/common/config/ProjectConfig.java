@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 /**
  * (填写类功能描述)
@@ -33,7 +34,7 @@ public class ProjectConfig {
 
     private String basePath;
 
-    private String interceptorExcludeUrl;
+    private List<String> interceptorExcludeUrl;
 
     private String baseUrl;
 
@@ -55,11 +56,11 @@ public class ProjectConfig {
         this.basePath = basePath;
     }
 
-    public String getInterceptorExcludeUrl() {
+    public List<String> getInterceptorExcludeUrl() {
         return interceptorExcludeUrl;
     }
 
-    public void setInterceptorExcludeUrl(String interceptorExcludeUrl) {
+    public void setInterceptorExcludeUrl(List<String> interceptorExcludeUrl) {
         this.interceptorExcludeUrl = interceptorExcludeUrl;
     }
 

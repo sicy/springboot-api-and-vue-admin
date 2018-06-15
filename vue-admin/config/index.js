@@ -11,7 +11,7 @@ const title = "通用管理平台--请修改名称";
 const apiPath = '/vvvvv';
 
 //后台IP和端口
-const apiTarget = 'http://localhost:8082/';
+const apiTarget = 'http://localhost:8081/';
 
 module.exports = {
   title: title,
